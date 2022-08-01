@@ -1,0 +1,2 @@
+
+-DCATKIN_DEVEL_PREFIX=/media/newhd/catbus/devel -DCMAKE_INSTALL_PREFIX=/media/newhd/catbus/install -G Unix Makefiles
