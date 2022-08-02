@@ -1,10 +1,11 @@
 """
-pre-trained model retrieved from https://github.com/deepakcrk/yolov5-crowdhuman
+Implements YOLOv5 to detect the head of a person in the camera frame
+Pre-trained model retrieved from https://github.com/deepakcrk/yolov5-crowdhuman
 """
 
 import rospy
-from action_lib_msgs.msg import GoalID
-from geometry_msgs.msg import Image
+from geometry_msgs.msg import Point
+from sensor_msgs.msg import Image
 
 import math
 import numpy as np
@@ -21,6 +22,9 @@ from yolo.utils.general import check_img_size, check_requirements, check_imshow,
 from yolo.utils.plots import plot_one_box
 from yolo.utils.torch_utils import select_device, load_classifier, time_synchronized
 
+camera_matrix = np.array([[921.170702, 0.000000, 459.904354], [0.000000, 919.018377, 351.238301], [0.000000, 0.000000, 1.000000]])
+dist_coeffs= np.array([-0.033458, 0.105152, 0.001256, -0.006647, 0.000000])
+
 class Yolo():
 
     def __init__(self):
@@ -28,8 +32,8 @@ class Yolo():
         rospy.init_node('driver', anonymous=True)
 
         # ROS Publishers
-        self.displacement_pub = rospy.Publisher('displacement', GoalID, queue_size=1)
-        self.goal_msg = GoalID() # TODO what kind of message hmmm
+        self.displacement_pub = rospy.Publisher('displacement', Point, queue_size=1)
+        self.goal_msg = Point() # TODO what kind of message hmmm
 
         # ROS Subscribers
         rospy.Subscriber('camera', Image, self.camera_callback)
@@ -48,8 +52,9 @@ class Yolo():
         # Second-stage classifier
         self.classify = False
         if self.classify:
-            self.modelc = load_classifier(name='resnet101', n=2)  # initialize
-            self.modelc.load_state_dict(torch.load('weights/resnet101.pt', map_location=self.device)['model']).to(self.device).eval()
+            self.modelc = load_classifier(name='resnet101', n=2)  # initialize classifier
+            self.modelc.load_state_dict(torch.load('weights/resnet101.pt', 
+                                        map_location=self.device)['model']).to(self.device).eval()
 
          # Get names and colors
         self.names = self.model.module.names if hasattr(self.model, 'module') else self.model.names
@@ -97,10 +102,19 @@ class Yolo():
                         # Find bbox
                         label = f'{self.names[int(cls)]} {conf:.2f}'
                         if 'head' in label:
+                            # Calculate displacement and draw bbox
                             c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
                             wh = c2[0] - c1[0]
-                            centroid = [c1[0] + wh / 2, c1[1] - wh / 2]
-                            # TODO publish displacement nani nani
+                            d1 = [c1[0], c1[1] - wh / 2]
+                            d2 = [c2[0], c1[1] - wh / 2]
+                            d3 = [c2[0], c2[1] + wh / 2]
+                            d4 = [c1[0], c2[1] + wh /2]
+                            # centroid = [c1[0] + 3 * wh / 4, c1[1] - wh / 2]
+                            _ , tvec, _ = cv2.aruco.estimatePoseSingleMarker([d1, d2, d3, d4], 12, camera_matrix, dist_coeffs)
+                            self.goal_msg.x = tvec[0]
+                            self.goal_msg.y = tvec[1] # TODO I'm not sure if this is correct :/
+                            self.goal_msg.z = tvec[2]
+                            self.displacement_pub(self.goal_msg)
                             plot_one_box(xyxy, im0, label=label, color=self.colors[int(cls)], line_thickness=3)
                         else:
                             pass
@@ -115,3 +129,4 @@ class Yolo():
 
 if __name__=='__main__':
     yolo = Yolo()
+    rospy.spin()
