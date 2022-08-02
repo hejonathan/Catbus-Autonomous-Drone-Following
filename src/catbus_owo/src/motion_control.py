@@ -6,7 +6,7 @@ import math
 from collections import deque
 import time
 import numpy as np
-from rviz_tools import RvisMarkers
+from rviz_tools import RvizMarkers
 
 class PID:
     def __init__(self, ) -> None:
@@ -64,7 +64,7 @@ class MotionControl:
         self.MIN_DIST = 10 # consecutive points that are within 10 cm of each other are ignored
         self.MAX_DIST = 100 # consecutive points that are further than 10 cm of each other are treated as error and ignored
         self.TOLERANCE_DIST = 25 # drone is considered reached the point if within 25 cm of the point
-        self.markers = RvisMarkers('map', 'visualization_marker')
+        self.markers = RvizMarkers('map', 'visualization_marker')
         rp.on_shutdown(self.markers.deteleAllMarkers())
         self.q = deque()
         self.rviz_drone = []
