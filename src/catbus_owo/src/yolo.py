@@ -29,14 +29,14 @@ class Yolo():
 
     def __init__(self):
         # Initialize ROS node
-        rospy.init_node('driver', anonymous=True)
+        rospy.init_node('yolo', anonymous=True)
 
         # ROS Publishers
-        self.displacement_pub = rospy.Publisher('displacement', Point, queue_size=1)
+        self.displacement_pub = rospy.Publisher('displacement', Point, queue_size=5)
         self.goal_msg = Point() # TODO what kind of message hmmm
 
         # ROS Subscribers
-        rospy.Subscriber('camera', Image, self.camera_callback)
+        rospy.Subscriber('vid', Image, self.camera_callback)
 
         set_logging()
 
