@@ -10,9 +10,14 @@ from djitellopy import Tello
 from std_msgs.msg import Empty
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
+from rviz_tools import RvizMarkers
 
 class Driver:
     def __init__(self) -> None:
+        self.v = [0,0,0,0] #velocity in x,y,z,angular directions (this is initializing 'v')
+        rospy.loginfo('Tello buddy says wasaaaaaah')
+        rospy.init_node('driver', anonymous=True)
+        rospy.init_node('test', anonymous=False, log_level=rospy.INFO, disable_signals=False)
         self.vel_lis = rospy.Subscriber('cmd_vel', Twist, self.cmd_vel)
         self.img_pub = rospy.Publisher('vid', Image, queue_size=10)
         self.MAX_SPEED = 80
@@ -29,6 +34,8 @@ class Driver:
         pygame.init()
         pygame.display.set_caption("Tello video stream")
         self.screen = pygame.display.set_mode((960, 720))
+        markers = RvizMarkers('/map', 'visualization_marker')
+        rospy.on_shutdown(markers.deleteAllMarkers()) #exit handler
         
         
     def cmd_vel(self, data):
@@ -53,6 +60,8 @@ class Driver:
         self.running = False
         
     def run(self):
+        lastlenH = 0
+        lastlenD = 0
         r = rospy.Rate(self.FPS)
         self.running = True
         while self.running:
@@ -66,6 +75,9 @@ class Driver:
             self.img_pub.publish(self.br.cv2_to_imgmsg(frame, 'bgr8')) #converting cv2 image to ross image form
             if self.tello.is_flying:
                     self.tello.send_rc_control(int(self.v[0]), int(self.v[1]), int(self.v[2]), int(self.v[3]))
+            
+            # line here publishing lines
+            
             r.sleep()
         self.stop()
 
@@ -82,20 +94,8 @@ if __name__ == '__main__':
 
 #RVIZ:
 
-
-#rospy.init_node('test', anonymous=False, log_level=rospy.INFO, disable_signals=False)
-
-# Define exit handler
-#def cleanup_node():
-#     print "Shutting down node"
-#     markers.deleteAllMarkers()
-# rospy.on_shutdown(cleanup_node)
-# markers = rviz_tools.RvizMarkers('/map', 'visualization_marker')
-
 # Hpath = 
 # Dpath = 
 # go through and draw line's between every point and publish to markers
-
-# rospy.Rate(1).sleep() #1 Hz
 
 # display the plot markers
