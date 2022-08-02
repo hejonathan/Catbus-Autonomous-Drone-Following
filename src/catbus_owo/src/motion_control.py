@@ -67,9 +67,9 @@ class MotionControl:
         self.markers = RvizMarkers('map', 'visualization_marker')
         rp.on_shutdown(self.markers.deteleAllMarkers())
         self.q = deque()
-        self.rviz_drone = []
+        self.rviz_drone = [] # paths of the points tracking the locations of the drone and the head
         self.rviz_obj = []
-        self.RVIZ_MAX_LENGTH = 100
+        self.RVIZ_MAX_LENGTH = 100 # the maximum length of the above lists to prevent clogging up the memory
         self.pid = PID()
         self.drone_loc = np.array([0,0,0,0])
         rp.spin()
@@ -77,6 +77,13 @@ class MotionControl:
     def add_point(self, data):
         assert type(data) == Twist
         if len(self.q)==0 or self.MAX_DIST> self._dist(data, self.q[-1]) > self.MIN_DIST: # add to the list if the list is empty or the new point is far away enough from the last point
+            # transform from drone's fov to global fov
+            # x: left right, y: forward back, z: up down
+            angle = self.drone_loc[3] # define counter clockwise positive
+            data.linear.z += self.drone_loc[2]
+            data.linear.x = self.drone_loc[0] + data.linear.x * math.cos(math.radians(angle)) + data.linear.y * math.sin(math.radians(angle))
+            data.linear.y = self.drone_loc[1] + data.linear.y * math.cos(math.radians(angle)) + data.linear.x - math.sin(math.radians(angle))
+
             self.q.append(data)
             rp.loginfo(f'owo~ added a point at {self.q[-1].linear.x} {self.q[-1].linear.y} {self.q[-1].linear.z}')
             
@@ -90,12 +97,12 @@ class MotionControl:
             rp.loginfo('aw so saddy saddy no points to track')
             return
         pt = self.q[0]
-        err = np.array([pt.linear.x, pt.linear.y, pt.linear.z, 0]) - self.drone_loc
+        err = np.array([pt.linear.x, pt.linear.y, pt.linear.z, 0]) - self.drone_loc # find the displacement between the drone and the point
         self.pid.add_error(err)
-        vel = self.pid.vel
+        vel = self.pid.vel # obtain the optimal velocity of the drone
 
         pub = Twist()
-        pub.linear.x, pub.linear.z, pub.linear.y, pub.angular.x = vel
+        pub.linear.x, pub.linear.y, pub.linear.z, pub.angular.x = vel
         self.vel_pub.publish(pub)
 
     def add__drone_loc(self, data):
@@ -110,7 +117,7 @@ class MotionControl:
         self.markers.publishPath(self.rviz_drone, 'blue', 0.2)
         
 
-    def _dist(a:Twist, b:Twist):
+    def _dist(a:Twist, b:Twist): # find distance between two points
         dx = b.linear.x - a.linear.x
         dy = b.linear.y - a.linear.y
         dz = b.linear.z - a.linear.z
