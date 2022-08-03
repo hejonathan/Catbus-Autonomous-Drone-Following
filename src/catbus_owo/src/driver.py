@@ -28,7 +28,7 @@ class Driver:
         self.br = CvBridge() #getting ready for later image conversion
         pygame.init() #initializing pygame in these 3 lines so that we can use key commands to start and stop the drone
         pygame.display.set_caption("Tello video stream")
-        self.screen = pygame.display.set_mode((960, 720))
+        self.screen = pygame.display.set_mode((100, 100))
         
         
     def cmd_vel(self, data): #command velocity function provides velocity data in xyz as well as angular directions
@@ -54,18 +54,19 @@ class Driver:
         
     def run(self): #The run function updates important commands/information in real time
         r = rospy.Rate(self.FPS)
-        self.start()
         while self.running:
             for event in pygame.event.get(): #these lines provide the optino of pressing esc to stop everything
                 if event.type == pygame.KEYDOWN:
                     rospy.loginfo(f'the master pressed the {str(event.key)}~~')
-                    if event.key == pygame.K_ESACAPE:
-                        self.stop()           
+                    if event.key == pygame.K_ESCAPE:
+                        break           
+                    elif event.key == pygame.K_SPACE:
+                        self.start()
             frame = self.frame_read.frame #getting the most recent frame
             self.img_pub.publish(self.br.cv2_to_imgmsg(frame, 'bgr8')) #converting cv2 image to ross image form
             if self.tello.is_flying:
                     self.tello.send_rc_control(int(self.v[0]), int(self.v[1]), int(self.v[2]), int(self.v[3]))
-            self.vel_request.publish()
+            self.vel_request.publish(Empty())
                 
             r.sleep() #add a delay in so everything computes eaasily
         self.stop()

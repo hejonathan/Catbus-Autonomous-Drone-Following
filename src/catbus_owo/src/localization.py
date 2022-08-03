@@ -53,7 +53,7 @@ class Localization:
 
             cam_loc = Twist()
             cam_loc.linear.x, cam_loc.linear.z, cam_loc.linear.y = (-R_tc*np.matrix(tvec).T).astype(int)
-            cam_roll, cam_pitch, cam_yaw = self._rotationMatrix2EulerAngles(R_FLIP*R_tc).astype(int)
+            cam_pitch, cam_yaw, cam_roll = self._rotationMatrix2EulerAngles(R_FLIP*R_tc).astype(int)
             cam_loc.angular.x, cam_loc.angular.y, cam_loc.angular.z = cam_roll, cam_pitch, cam_yaw
             self.cam_loc_pub.publish(cam_loc)
         else:
