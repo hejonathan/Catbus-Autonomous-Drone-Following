@@ -21,8 +21,6 @@ class Localization:
         self.img_lbl_pub = rospy.Publisher('vid_lbl', Image, queue_size=10)
         self.tag_loc_pub = rospy.Publisher('tag_loc', Twist, queue_size=10)
         self.cam_loc_pub = rospy.Publisher('cam_loc', Twist, queue_size=10)
-        self.found_pub = rospy.Publisher('tag_found', Bool, queue_size=10)
-        self.found = False
         self.br = CvBridge()
         self.FPS = 30
         self.arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_ARUCO_ORIGINAL)
@@ -38,7 +36,6 @@ class Localization:
             ids = tuple([np.array(ids)[np.where(ids==7)]])
             if corners[0].shape[0] == 0:
                 return
-            self.found = True
                 
             img_lbl = cv2.aruco.drawDetectedMarkers(img, corners)
             rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners, MARKER_LENGTH, camera_matrix, distortion) # For a single marker
@@ -61,7 +58,6 @@ class Localization:
             self.cam_loc_pub.publish(cam_loc)
         else:
             img_lbl = img
-        self.found_pub.publish(Bool(self.found))
         self.img_lbl_pub.publish(self.br.cv2_to_imgmsg(img_lbl, 'bgr8'))
             
     def _rotationMatrix2EulerAngles(self, R):

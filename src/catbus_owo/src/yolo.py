@@ -112,8 +112,8 @@ class Yolo():
                             # centroid = [c1[0] + 3 * wh / 4, c1[1] - wh / 2]
                             _ , tvec, _ = cv2.aruco.estimatePoseSingleMarker([d1, d2, d3, d4], 12, camera_matrix, dist_coeffs)
                             self.goal_msg.x = tvec[0]
-                            self.goal_msg.y = tvec[1] # TODO I'm not sure if this is correct :/
-                            self.goal_msg.z = tvec[2]
+                            self.goal_msg.z = tvec[1] # TODO I'm not sure if this is correct :/
+                            self.goal_msg.y = tvec[2]
                             self.displacement_pub(self.goal_msg)
                             plot_one_box(xyxy, im0, label=label, color=self.colors[int(cls)], line_thickness=3)
                         else:

@@ -57,7 +57,7 @@ class PID:
 class MotionControl:
     def __init__(self) -> None:
         rp.init_node('motion_control', anonymous=True)
-        self.point_sub = rp.Subscriber('point', Twist, self.add_point) # subscribes from yolo, the location of the object
+        self.point_sub = rp.Subscriber('displacement', Point, self.add_point) # subscribes from yolo, the location of the object
         self.vel_req_sub = rp.Subscriber('request_vel', Empty, self.publish_vel) # subscribe from driver, publishes velocity everytime this request is called
         self.location_sub = rp.Subscriber('cam_loc', Twist, self.add_drone_loc) # subscribe from localization, the location of the drone
         self.vel_pub = rp.Publisher('cmd_vel', Twist, queue_size=10) # publish the commanded velocity
@@ -75,19 +75,19 @@ class MotionControl:
         rp.spin()
         
     def add_point(self, data):
-        assert type(data) == Twist
+        assert type(data) == Point
         if len(self.q)==0 or self.MAX_DIST> self._dist(data, self.q[-1]) > self.MIN_DIST: # add to the list if the list is empty or the new point is far away enough from the last point
             # transform from drone's fov to global fov
             # x: left right, y: forward back, z: up down
             angle = self.drone_loc[3] # define counter clockwise positive
-            data.linear.z += self.drone_loc[2]
-            data.linear.x = self.drone_loc[0] + data.linear.x * math.cos(math.radians(angle)) + data.linear.y * math.sin(math.radians(angle))
-            data.linear.y = self.drone_loc[1] + data.linear.y * math.cos(math.radians(angle)) + data.linear.x - math.sin(math.radians(angle))
+            data.z += self.drone_loc[2]
+            data.x = self.drone_loc[0] + data.x * math.cos(math.radians(angle)) + data.y * math.sin(math.radians(angle))
+            data.y = self.drone_loc[1] + data.y * math.cos(math.radians(angle)) + data.x - math.sin(math.radians(angle))
 
             self.q.append(data)
-            rp.loginfo(f'owo~ added a point at {self.q[-1].linear.x} {self.q[-1].linear.y} {self.q[-1].linear.z}')
+            rp.loginfo(f'owo~ added a point at {self.q[-1].x} {self.q[-1].y} {self.q[-1].z}')
             
-            self.rviz_obj.append(Point(x=data.linear.x, y=data.linear.y, z=data.linear.z))
+            self.rviz_obj.append(Point(x=data.x, y=data.y, z=data.z))
             while len(self.rviz_obj) > self.RVIZ_MAX_LENGTH:
                 self.rviz_obj.pop(0)
             self.markers.publishPath(self.rviz_obj, 'orange', 0,2)
@@ -97,7 +97,7 @@ class MotionControl:
             rp.loginfo('aw so saddy saddy no points to track')
             return
         pt = self.q[0]
-        err = np.array([pt.linear.x, pt.linear.y, pt.linear.z, 0]) - self.drone_loc # find the displacement between the drone and the point
+        err = np.array([pt.x, pt.y, pt.z, 0]) - self.drone_loc # find the displacement between the drone and the point
         self.pid.add_error(err)
         vel = self.pid.vel # obtain the optimal velocity of the drone
 
