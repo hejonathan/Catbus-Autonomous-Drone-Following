@@ -7,8 +7,6 @@ class localization:
     def __init__(self):
         
         rospy.Subscriber("tello/video", Video)
-        self.tello = Tello()
-        self.tello.connect()
 
         # LOAD IMAGE AND TAG DICTIONARY
         arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_ARUCO_ORIGINAL)
