@@ -16,7 +16,7 @@ R_FLIP = np.array([[1,0,0],[0,-1,0],[0,0,-1]])
 
 class Localization:
     def __init__(self) -> None:
-        rospy.init_node('localizatoin', anonymous=True)
+        rospy.init_node('localization', anonymous=True)
         self.img_sub = rospy.Subscriber('vid', Image, self.callback)
         self.img_lbl_pub = rospy.Publisher('vid_lbl', Image, queue_size=10)
         self.tag_loc_pub = rospy.Publisher('tag_loc', Twist, queue_size=10)

@@ -1,0 +1,3 @@
+<launch>
+    <node name="yolo" pkg="catbus_owo" type="yolo.py" output = "screen" />
+</launch>
