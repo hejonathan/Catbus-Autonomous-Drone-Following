@@ -64,6 +64,7 @@ class MotionControl:
         self.MIN_DIST = 10 # consecutive points that are within 10 cm of each other are ignored
         self.MAX_DIST = 100 # consecutive points that are further than 10 cm of each other are treated as error and ignored
         self.TOLERANCE_DIST = 25 # drone is considered reached the point if within 25 cm of the point
+        rp.init_node('rviz', anomymous=False, log_level=rp.INFO, disable_signals=False)
         self.markers = RvizMarkers('map', 'visualization_marker')
         rp.on_shutdown(self.markers.deteleAllMarkers())
         self.q = deque()
