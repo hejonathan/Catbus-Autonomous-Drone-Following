@@ -7,6 +7,7 @@
       },
       "includePath": [
         "/opt/ros/noetic/include/**",
+        "/media/newhd/catbus/src/catbus_owo/include/**",
         "/usr/include/**"
       ],
       "name": "ROS",

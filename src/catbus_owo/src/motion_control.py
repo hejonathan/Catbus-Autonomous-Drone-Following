@@ -59,7 +59,7 @@ class MotionControl:
         rp.init_node('motion_control', anonymous=True)
         self.point_sub = rp.Subscriber('point', Twist, self.add_point) # subscribes from yolo, the location of the object
         self.vel_req_sub = rp.Subscriber('request_vel', Empty, self.publish_vel) # subscribe from driver, publishes velocity everytime this request is called
-        self.location_sub = rp.Subscriber('drone_loc', Twist, self.add_drone_loc) # subscribe from localization, the location of the drone
+        self.location_sub = rp.Subscriber('cam_loc', Twist, self.add_drone_loc) # subscribe from localization, the location of the drone
         self.vel_pub = rp.Publisher('cmd_vel', Twist, queue_size=10) # publish the commanded velocity
         self.MIN_DIST = 10 # consecutive points that are within 10 cm of each other are ignored
         self.MAX_DIST = 100 # consecutive points that are further than 10 cm of each other are treated as error and ignored
@@ -107,7 +107,7 @@ class MotionControl:
 
     def add__drone_loc(self, data):
         assert type(data) == Twist
-        self.drone_loc = np.array([data.linear.x, data.linear.y, data.linear.z, data.angular.x]) # x, y, z, yaw of the drone
+        self.drone_loc = np.array([data.linear.x, data.linear.y, data.linear.z, data.angular.z]) # x, y, z, yaw of the drone
         while len(self.q) > 0 and self._dist(self.q[0], data) < self.TOLERANCE_DIST:
             self.q.popleft()
         
