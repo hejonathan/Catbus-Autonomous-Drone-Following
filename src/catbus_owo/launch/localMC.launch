@@ -1,0 +1,4 @@
+<launch>
+    <node name="localization" pkg="catbus_owo" type="driver.py" output = "screen" />
+    <node name="motion_control" pkg="catbus_owo" type="motion_control.py" output = "screen" />
+</launch>
