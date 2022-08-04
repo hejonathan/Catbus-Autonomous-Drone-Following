@@ -164,7 +164,7 @@ include_directories(
 catkin_install_python(PROGRAMS
   src/localization.py
   src/driver.py
-  src/yolo.py
+  src/sushi.py
   src/motion_control.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
