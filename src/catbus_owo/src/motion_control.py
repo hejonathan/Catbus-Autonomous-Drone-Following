@@ -65,9 +65,9 @@ class MotionControl:
         self.MIN_DIST = 10 # consecutive points that are within 10 cm of each other are ignored
         self.MAX_DIST = 100 # consecutive points that are further than 10 cm of each other are treated as error and ignored
         self.TOLERANCE_DIST = 25 # drone is considered reached the point if within 25 cm of the point
-        rp.init_node('rviz', anomymous=False, log_level=rp.INFO, disable_signals=False)
+        
         self.markers = RvizMarkers('map', 'visualization_marker')
-        rp.on_shutdown(self.markers.deteleAllMarkers())
+        rp.on_shutdown(self.cleanup_node)
         self.q = deque()
         self.rviz_drone = [] # paths of the points tracking the locations of the drone and the head
         self.rviz_obj = []
@@ -107,7 +107,7 @@ class MotionControl:
         pub.linear.x, pub.linear.y, pub.linear.z, pub.angular.x = vel
         self.vel_pub.publish(pub)
 
-    def add__drone_loc(self, data):
+    def add_drone_loc(self, data):
         assert type(data) == Twist
         self.drone_loc = np.array([data.linear.x, data.linear.y, data.linear.z, data.angular.z]) # x, y, z, yaw of the drone
         while len(self.q) > 0 and self._dist(self.q[0], data) < self.TOLERANCE_DIST:
@@ -117,6 +117,7 @@ class MotionControl:
         while len(self.rviz_drone) > self.RVIZ_MAX_LENGTH:
             self.rviz_drone.pop(0)
         self.markers.publishPath(self.rviz_drone, 'blue', 0.2)
+        rp.loginfo(f'added drone location at {Point(x=data.linear.x, y=data.linear.y, z=data.linear.z)}')
         
 
     def _dist(a:Twist, b:Twist): # find distance between two points
@@ -124,6 +125,9 @@ class MotionControl:
         dy = b.linear.y - a.linear.y
         dz = b.linear.z - a.linear.z
         return math.sqrt(dx**2 + dy**2 + dz**2)
+
+    def cleanup_node(self):
+        self.markers.deleteAllMarkers()
 
 
 if __name__=='__main__':
