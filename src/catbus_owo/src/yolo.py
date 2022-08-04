@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Implements YOLOv5 to detect the head of a person in the camera frame
 Pre-trained model retrieved from https://github.com/deepakcrk/yolov5-crowdhuman

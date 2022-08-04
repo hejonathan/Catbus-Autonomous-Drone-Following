@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from sympy import im
 import rospy as rp
 from geometry_msgs.msg import Twist, Point

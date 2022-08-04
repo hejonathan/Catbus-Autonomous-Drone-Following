@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Python includes
 import numpy
 import random # randint
