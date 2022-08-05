@@ -20,7 +20,7 @@ class Driver:
         self.img_pub = rospy.Publisher('vid', Image, queue_size=10)
         self.MAX_SPEED = 100 #the tello may need to go fast sometimes
         self.down_cam = False #we want to start from the front camera
-        self.FPS = 5 #choosing 5 frames per second to make image processing easier
+        self.FPS = 3 #choosing 5 frames per second to make image processing easier
         self.running = True
         self.tello = Tello() #Initializing Tello Tings
         self.tello.connect()

@@ -27,7 +27,7 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized
 camera_matrix = np.array([[921.170702, 0.000000, 459.904354], [0.000000, 919.018377, 351.238301], [0.000000, 0.000000, 1.000000]])
 dist_coeffs= np.array([-0.033458, 0.105152, 0.001256, -0.006647, 0.000000])
 
-RESCALE = .5
+RESCALE = .3
 IMG_SZ = (int(960*RESCALE), int(720*RESCALE))
 
 class Yolo():
@@ -83,7 +83,7 @@ class Yolo():
         pred = self.model(img, augment=True)[0]
 
         # Apply NMS
-        pred = non_max_suppression(pred, 0.25, 0.45, classes=0, agnostic=True) # TODO weird params no comprendo
+        pred = non_max_suppression(pred, 0.25, 0.45, classes=None, agnostic=True) # TODO weird params no comprendo
         t2 = time_synchronized()
 
         det = pred[0]
@@ -99,12 +99,13 @@ class Yolo():
                 s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
             # Write results
-            for *xyxy, conf, cls in reversed(det):
+            for *xyxy, conf, cls in [det[0]]:
+                print(conf)
                 # Find bbox
                 label = f'{self.names[int(cls)]} {conf:.2f}'
                 if 'head' in label:
                     # Calculate displacement and draw bbox
-                    xyxy /= RESCALE
+                    # xyxy /= RESCALE
                     c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
                     wh = c2[0] - c1[0]
                     d1 = [c1[0], c1[1] - wh / 2]
@@ -112,10 +113,12 @@ class Yolo():
                     d3 = [c2[0], c2[1] + wh / 2]
                     d4 = [c1[0], c2[1] + wh /2]
                     # centroid = [c1[0] + 3 * wh / 4, c1[1] - wh / 2]
-                    _ , tvec, _ = cv2.aruco.estimatePoseSingleMarker([d1, d2, d3, d4], 12, camera_matrix, dist_coeffs)
+                    _ , tvec, _ = cv2.aruco.estimatePoseSingleMarkers(np.array([[d1, d2, d3, d4]]), 12, camera_matrix, dist_coeffs)
+                    tvec = tvec[0][0]
                     self.goal_msg.x = tvec[0]
                     self.goal_msg.z = tvec[1] # TODO I'm not sure if this is correct :/
                     self.goal_msg.y = tvec[2]
+                    print(tvec)
                     self.displacement_pub.publish(self.goal_msg)
                     plot_one_box(xyxy, im0, label=label, color=self.colors[int(cls)], line_thickness=5)
 
