@@ -3,6 +3,7 @@ import traceback
 import rospy
 import pygame
 import numpy as np
+import cv2
 from cv_bridge import CvBridge
 from djitellopy import Tello
 from std_msgs.msg import Empty

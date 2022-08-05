@@ -60,10 +60,15 @@ class Yolo():
         rospy.loginfo(f'model loaded. Classes:{self.names}')
 
     def camera_callback(self, data):
+        if not hasattr(self, 'imgsz'):
+            return
         frame = CvBridge().imgmsg_to_cv2(data)
         im0 = frame.copy()
         img = letterbox(frame, self.imgsz, stride=self.stride)[0]
-        img = torch.from_numpy(frame).to(self.device)
+        print(img.shape)
+        img = np.swapaxes(img, 0, 2)
+        img = np.swapaxes(img, 1, 2)
+        img = torch.from_numpy(img).to(self.device)
         img = img.float()  # uint8 to fp16/32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
         if img.ndimension() == 3:
