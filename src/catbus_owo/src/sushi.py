@@ -27,6 +27,9 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized
 camera_matrix = np.array([[921.170702, 0.000000, 459.904354], [0.000000, 919.018377, 351.238301], [0.000000, 0.000000, 1.000000]])
 dist_coeffs= np.array([-0.033458, 0.105152, 0.001256, -0.006647, 0.000000])
 
+RESCALE = .5
+IMG_SZ = (int(960*RESCALE), int(720*RESCALE))
+
 class Yolo():
 
     def __init__(self):
@@ -49,7 +52,7 @@ class Yolo():
 
         self.model = attempt_load(self.weights, map_location=self.device)  # load FP32 model
         self.stride = int(self.model.stride.max())  # model stride
-        self.imgsz = check_img_size((960, 720), s=self.stride)  # check img_size
+        self.imgsz = check_img_size(IMG_SZ, s=self.stride)  # check img_size
 
         # self.model.warmup(imgsz=(1,3,*self.imgsz))
 
@@ -63,6 +66,7 @@ class Yolo():
         if not hasattr(self, 'imgsz'):
             return
         frame = CvBridge().imgmsg_to_cv2(data)
+        frame = cv2.resize(frame, IMG_SZ, interpolation=cv2.INTER_AREA)
         im0 = frame.copy()
         img = letterbox(frame, self.imgsz, stride=self.stride)[0]
         print(img.shape)
@@ -100,6 +104,7 @@ class Yolo():
                 label = f'{self.names[int(cls)]} {conf:.2f}'
                 if 'head' in label:
                     # Calculate displacement and draw bbox
+                    xyxy /= RESCALE
                     c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
                     wh = c2[0] - c1[0]
                     d1 = [c1[0], c1[1] - wh / 2]
@@ -112,14 +117,14 @@ class Yolo():
                     self.goal_msg.z = tvec[1] # TODO I'm not sure if this is correct :/
                     self.goal_msg.y = tvec[2]
                     self.displacement_pub.publish(self.goal_msg)
-                    plot_one_box(xyxy, im0, label=label, color=self.colors[int(cls)], line_thickness=3)
+                    plot_one_box(xyxy, im0, label=label, color=self.colors[int(cls)], line_thickness=5)
 
-                # Print time (inference + NMS)
-                print(f'{s}Done. ({t2 - t1:.3f}s)')
+            # Print time (inference + NMS)
+            print(f'{s}Done. ({t2 - t1:.3f}s)')
 
-                # Stream video
-                cv2.imshow('vid', im0)
-                cv2.waitKey(1)
+            # Stream video
+            cv2.imshow('vid', im0)
+            cv2.waitKey(1)
 
 
 if __name__=='__main__':
