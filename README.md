@@ -1,5 +1,7 @@
 # Cat(kin)bus
 
+LINK TO SLIDE PRESENTATION: https://docs.google.com/presentation/d/1UctnK75cxS3Pep-5C0489GU4yb0VlhBdIWLTOmArEKs/edit?usp=sharing
+
 Charlie Benjamin, 
 Jonathan He,
 Yuta Roy Ioriya,
